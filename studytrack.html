@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyTrack</title>
+<style>
+:root{
+  --bg:#f6f5f2;--surface:#fff;--ink:#1c1b19;--sub:#6b6a66;--line:#e5e3dd;
+  --accent:#3a5a6b;--accent2:#c97b3d;--green:#3f7d54;--amber:#c9962f;--red:#b04a3f;
+  --radius:10px;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#17181a;--surface:#212225;--ink:#eeece7;--sub:#9a9892;--line:#333438;}
+}
+:root[data-theme="dark"]{--bg:#17181a;--surface:#212225;--ink:#eeece7;--sub:#9a9892;--line:#333438;}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5;}
+header{position:sticky;top:0;padding-top:env(safe-area-inset-top,0px);background:var(--surface);border-bottom:1px solid var(--line);z-index:10;}
+.bar{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:14px 20px;flex-wrap:wrap;}
+.brand{font-weight:700;font-size:18px;letter-spacing:-.02em;color:var(--accent);margin-right:auto;}
+nav{display:flex;gap:4px;}
+nav button{background:none;border:none;color:var(--sub);font-size:14px;padding:8px 12px;border-radius:8px;cursor:pointer;}
+nav button.active{background:var(--accent);color:#fff;}
+.theme-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--ink);}
+main{max-width:960px;margin:0 auto;padding:24px 20px 60px;}
+.view{display:none;}
+.view.active{display:block;}
+h1{font-size:22px;margin:0 0 18px;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+.card .n{font-size:26px;font-weight:700;}
+.card .l{color:var(--sub);font-size:13px;margin-top:2px;}
+.progress-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:22px;}
+.progress-bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;background:var(--green);transition:width .3s;}
+.section-title{font-size:15px;font-weight:600;margin:24px 0 10px;}
+.reminders{display:flex;flex-direction:column;gap:8px;}
+.reminder{display:flex;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:8px;padding:10px 14px;}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);font-size:14px;font-family:inherit;}
+.controls input[type=text]{flex:1;min-width:160px;}
+.list{display:flex;flex-direction:column;gap:10px;}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.item.overdue{border-left:4px solid var(--red);}
+.item.soon{border-left:4px solid var(--amber);}
+.item.done{border-left:4px solid var(--green);opacity:.75;}
+.item h3{margin:0 0 4px;font-size:15px;}
+.meta{color:var(--sub);font-size:13px;display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;}
+.b-pending{background:#c9962f22;color:var(--amber);}
+.b-completed{background:#3f7d5422;color:var(--green);}
+.b-overdue{background:#b04a3f22;color:var(--red);}
+.pri-High{color:var(--red);}
+.pri-Medium{color:var(--amber);}
+.pri-Low{color:var(--sub);}
+.actions{display:flex;gap:6px;align-items:flex-start;}
+.actions button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;}
+.actions button.primary{background:var(--green);color:#fff;border-color:var(--green);}
+.actions button.danger{border-color:var(--red);color:var(--red);}
+form.addform{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:grid;gap:12px;max-width:480px;}
+form.addform label{font-size:13px;color:var(--sub);display:block;margin-bottom:4px;}
+form.addform input,form.addform select,form.addform textarea{width:100%;}
+form.addform button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;cursor:pointer;font-weight:600;}
+.empty{color:var(--sub);text-align:center;padding:40px 20px;border:1px dashed var(--line);border-radius:var(--radius);}
+.modal-bg{display:none;position:fixed;inset:0;background:#00000066;align-items:center;justify-content:center;z-index:50;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius);padding:20px;max-width:320px;text-align:center;}
+.modal .actions{justify-content:center;margin-top:14px;}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand">StudyTrack</div>
+  <nav>
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="assignments">Assignments</button>
+    <button data-view="add">Add Assignment</button>
+    <button data-view="completed">Completed</button>
+  </nav>
+  <button class="theme-btn" id="themeBtn">🌓</button>
+</div></header>
+
+<main>
+  <div class="view active" id="v-dashboard">
+    <h1>Dashboard</h1>
+    <div class="cards" id="statCards"></div>
+    <div class="progress-wrap">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--sub);">
+        <span>Completion Progress</span><span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="section-title">Reminders</div>
+    <div class="reminders" id="reminderList"></div>
+  </div>
+
+  <div class="view" id="v-assignments">
+    <h1>Assignments</h1>
+    <div class="controls">
+      <input type="text" id="search" placeholder="Search assignments...">
+      <select id="fSubject"><option value="">All Subjects</option></select>
+      <select id="fStatus"><option value="">All Status</option><option>Pending</option><option>Completed</option><option>Overdue</option></select>
+      <select id="fPriority"><option value="">All Priority</option><option>Low</option><option>Medium</option><option>High</option></select>
+      <select id="fSort"><option value="due">Sort: Due Date</option><option value="name">Sort: Name</option></select>
+    </div>
+    <div class="list" id="assignmentList"></div>
+  </div>
+
+  <div class="view" id="v-add">
+    <h1>Add Assignment</h1>
+    <form class="addform" id="addForm">
+      <div><label>Assignment Name</label><input required id="f-name" type="text" placeholder="e.g. Math Homework 3"></div>
+      <div><label>Subject</label><input required id="f-subject" type="text" placeholder="e.g. Mathematics"></div>
+      <div><label>Description</label><textarea id="f-desc" rows="3" placeholder="Optional details"></textarea></div>
+      <div><label>Due Date</label><input required id="f-due" type="date"></div>
+      <div><label>Priority</label><select id="f-priority"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+      <button type="submit" id="addSubmit">Add Assignment</button>
+    </form>
+  </div>
+
+  <div class="view" id="v-completed">
+    <h1>Completed Assignments</h1>
+    <div class="list" id="completedList"></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="delModal"><div class="modal">
+  <p>Delete this assignment? This can't be undone.</p>
+  <div class="actions"><button class="actions-cancel" id="delCancel">Cancel</button><button class="danger" id="delConfirm" style="background:var(--red);color:#fff;border:none;">Delete</button></div>
+</div></div>
+
+<script>
+const STORAGE_KEY='studytrack_assignments_v1';
+let editingId=null, pendingDeleteId=null;
+
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){console.error(e);}
+  const today=new Date();
+  const addDays=(d)=>{const dt=new Date(today);dt.setDate(dt.getDate()+d);return dt.toISOString().slice(0,10);};
+  return [
+    {id:crypto.randomUUID(),name:"Data Structures Lab",subject:"Data Structures",description:"Implement a binary search tree",due:addDays(3),priority:"High",completed:false,completedDate:null},
+    {id:crypto.randomUUID(),name:"Python Assignment",subject:"Python",description:"Loops and functions exercise set",due:addDays(1),priority:"Medium",completed:false,completedDate:null},
+    {id:crypto.randomUUID(),name:"Logic Design Record",subject:"Logic Design",description:"Lab record submission",due:addDays(5),priority:"Low",completed:true,completedDate:today.toISOString().slice(0,10)}
+  ];
+}
+function saveData(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments)); }catch(e){console.error(e);} }
+let assignments=loadData();
+
+function daysLeft(due){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(due+"T00:00:00");
+  return Math.round((d-today)/86400000);
+}
+function statusOf(a){
+  if(a.completed) return "Completed";
+  return daysLeft(a.due)<0 ? "Overdue" : "Pending";
+}
+function dueLabel(a){
+  const n=daysLeft(a.due);
+  if(a.completed) return "Completed";
+  if(n<0) return `${Math.abs(n)} day${Math.abs(n)!==1?'s':''} overdue`;
+  if(n===0) return "Due today";
+  if(n===1) return "Due tomorrow";
+  return `${n} days left`;
+}
+
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+view).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  renderAll();
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+
+function renderDashboard(){
+  const total=assignments.length;
+  const completed=assignments.filter(a=>a.completed).length;
+  const overdue=assignments.filter(a=>!a.completed && daysLeft(a.due)<0).length;
+  const pending=total-completed-overdue;
+  const dueSoon=assignments.filter(a=>!a.completed && daysLeft(a.due)>=0 && daysLeft(a.due)<=3).length;
+  const pct=total? Math.round(completed/total*100):0;
+  const stats=[["Total Assignments",total],["Pending",pending],["Completed",completed],["Overdue",overdue],["Due Soon",dueSoon]];
+  document.getElementById('statCards').innerHTML=stats.map(([l,n])=>`<div class="card"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  document.getElementById('progressPct').textContent=pct+"%";
+  document.getElementById('progressFill').style.width=pct+"%";
+  const rem=assignments.filter(a=>!a.completed && daysLeft(a.due)>=0 && daysLeft(a.due)<=3)
+    .sort((a,b)=>daysLeft(a.due)-daysLeft(b.due));
+  document.getElementById('reminderList').innerHTML = rem.length? rem.map(a=>
+    `<div class="reminder"><span>${esc(a.name)} — ${esc(a.subject)}</span><strong>${dueLabel(a)}</strong></div>`).join('')
+    : `<div class="empty">No upcoming deadlines in the next 3 days.</div>`;
+}
+
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function itemCard(a, inCompletedView){
+  const st=statusOf(a);
+  const cls = a.completed?'done': (st==='Overdue'?'overdue': (daysLeft(a.due)<=3?'soon':''));
+  const badgeCls = st==='Overdue'?'b-overdue': st==='Completed'?'b-completed':'b-pending';
+  return `<div class="item ${cls}">
+    <div>
+      <h3>${esc(a.name)}</h3>
+      <div class="meta">
+        <span>${esc(a.subject)}</span>
+        <span class="pri-${a.priority}">${a.priority} priority</span>
+        <span class="badge ${badgeCls}">${st}</span>
+        <span>${dueLabel(a)}</span>
+      </div>
+      ${a.description?`<div class="meta">${esc(a.description)}</div>`:''}
+      ${a.completed && a.completedDate?`<div class="meta">Completed on ${a.completedDate}</div>`:''}
+    </div>
+    <div class="actions">
+      ${a.completed
+        ? `<button data-act="reopen" data-id="${a.id}">Move to Pending</button>`
+        : `<button class="primary" data-act="complete" data-id="${a.id}">Mark Completed</button>`}
+      <button data-act="edit" data-id="${a.id}">Edit</button>
+      <button class="danger" data-act="delete" data-id="${a.id}">Delete</button>
+    </div>
+  </div>`;
+}
+
+function populateSubjectFilter(){
+  const sel=document.getElementById('fSubject');
+  const current=sel.value;
+  const subjects=[...new Set(assignments.map(a=>a.subject))].sort();
+  sel.innerHTML='<option value="">All Subjects</option>'+subjects.map(s=>`<option>${esc(s)}</option>`).join('');
+  sel.value=current;
+}
+
+function renderAssignments(){
+  populateSubjectFilter();
+  const q=document.getElementById('search').value.toLowerCase();
+  const fs=document.getElementById('fSubject').value;
+  const fstat=document.getElementById('fStatus').value;
+  const fp=document.getElementById('fPriority').value;
+  const sort=document.getElementById('fSort').value;
+  let list=assignments.filter(a=>{
+    if(q && !a.name.toLowerCase().includes(q)) return false;
+    if(fs && a.subject!==fs) return false;
+    if(fstat && statusOf(a)!==fstat) return false;
+    if(fp && a.priority!==fp) return false;
+    return true;
+  });
+  list.sort((a,b)=> sort==='name' ? a.name.localeCompare(b.name) : new Date(a.due)-new Date(b.due));
+  document.getElementById('assignmentList').innerHTML = list.length? list.map(a=>itemCard(a)).join('') : `<div class="empty">No assignments match your filters.</div>`;
+}
+
+function renderCompleted(){
+  const list=assignments.filter(a=>a.completed).sort((a,b)=>new Date(b.completedDate)-new Date(a.completedDate));
+  document.getElementById('completedList').innerHTML = list.length? list.map(a=>itemCard(a,true)).join('') : `<div class="empty">No completed assignments yet.</div>`;
+}
+
+function renderAll(){ renderDashboard(); renderAssignments(); renderCompleted(); }
+
+document.addEventListener('click', e=>{
+  const btn=e.target.closest('button[data-act]');
+  if(!btn) return;
+  const id=btn.dataset.id, act=btn.dataset.act;
+  const a=assignments.find(x=>x.id===id);
+  if(!a) return;
+  if(act==='complete'){ a.completed=true; a.completedDate=new Date().toISOString().slice(0,10); saveData(); renderAll(); }
+  if(act==='reopen'){ a.completed=false; a.completedDate=null; saveData(); renderAll(); }
+  if(act==='delete'){ pendingDeleteId=id; document.getElementById('delModal').classList.add('show'); }
+  if(act==='edit'){ startEdit(a); }
+});
+
+document.getElementById('delCancel').addEventListener('click',()=>{ document.getElementById('delModal').classList.remove('show'); pendingDeleteId=null; });
+document.getElementById('delConfirm').addEventListener('click',()=>{
+  assignments=assignments.filter(x=>x.id!==pendingDeleteId);
+  saveData(); document.getElementById('delModal').classList.remove('show'); renderAll();
+});
+
+['search','fSubject','fStatus','fPriority','fSort'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderAssignments);
+  document.getElementById(id).addEventListener('change', renderAssignments);
+});
+
+function startEdit(a){
+  editingId=a.id;
+  document.getElementById('f-name').value=a.name;
+  document.getElementById('f-subject').value=a.subject;
+  document.getElementById('f-desc').value=a.description||'';
+  document.getElementById('f-due').value=a.due;
+  document.getElementById('f-priority').value=a.priority;
+  document.getElementById('addSubmit').textContent='Save Changes';
+  switchView('add');
+}
+
+document.getElementById('addForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name=document.getElementById('f-name').value.trim();
+  const subject=document.getElementById('f-subject').value.trim();
+  const description=document.getElementById('f-desc').value.trim();
+  const due=document.getElementById('f-due').value;
+  const priority=document.getElementById('f-priority').value;
+  if(!name||!subject||!due) return;
+  if(editingId){
+    const a=assignments.find(x=>x.id===editingId);
+    Object.assign(a,{name,subject,description,due,priority});
+    editingId=null;
+    document.getElementById('addSubmit').textContent='Add Assignment';
+  } else {
+    assignments.push({id:crypto.randomUUID(),name,subject,description,due,priority,completed:false,completedDate:null});
+  }
+  saveData();
+  e.target.reset();
+  document.getElementById('f-priority').value='Medium';
+  switchView('assignments');
+});
+
+const themeBtn=document.getElementById('themeBtn');
+themeBtn.addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+
+if("Notification" in window && Notification.permission==="default"){
+  try{ Notification.requestPermission(); }catch(e){}
+}
+
+renderAll();
+</script>
+</body>
+</html>
